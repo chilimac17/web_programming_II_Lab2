@@ -1,0 +1,22 @@
+{
+  "name": "lab1",
+  "version": "1.0.0",
+  "description": "Lab 1",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Michael Chillemi 20017987",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^3.2.6",
+    "axios": "^1.13.5",
+    "express": "^4.21.2",
+    "flat": "^6.0.1",
+    "lab2": "file:",
+    "node-redis": "^0.1.7",
+    "redis": "^5.10.0"
+  }
+}
