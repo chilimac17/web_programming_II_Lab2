@@ -22,14 +22,7 @@ const exportedMethods = {
     const { data } = await axios.get(`${POKEMON_API_URL}${p_id}`);
 
     const pokemonSummary = {
-      source: "pokeapi",
-      endpoint: `${POKEMON_API_URL}${p_id}`,
-      cache: {
-        hit: false,
-        key: `pokemon:${p_id}`,
-      },
-      fetchedAt: new Date().toISOString(), //use date class later 
-      data: {
+     
         id: data.id,
         name: data.name,
         height: data.height,
@@ -40,10 +33,10 @@ const exportedMethods = {
           stats[stat.stat.name] = stat.base_stat;
           return stats;
         }, {})
-      }
+      
     };
 
-
+    /*
 
     const key = `pokemon:${data.id}`;
     const history_entry = `${data.id}:${Date.now()}`
@@ -54,7 +47,47 @@ const exportedMethods = {
             .set(key, JSON.stringify(pokemonSummary), { safe: true })
             .lPush("recentlyViewed", history_entry)
             .exec();
+*/
 
+    return pokemonSummary;
+  },
+  async getPokemonAbilitiesData(p_id) {
+
+    //ADD TRY CATCH 
+    console.log("getPokemonAbilitiesData called with id: " + p_id);
+    //p_id = helper.errorCheckID(p_id);
+    //testisnumber()
+    const { data } = await axios.get(`${POKEMON_ABILITIES_API_URL}${p_id}`);
+
+    let english_entry = data.effect_entries.find((entry) => entry.language.name === "en");
+
+    const pokemonSummary = {
+     
+        id: data.id,
+        name: data.name,
+        generation: data.generation,
+        effect: english_entry.effect,
+        shortEffect: english_entry.short_effect
+    };
+
+    return pokemonSummary;
+  },
+  async getPokemonMovesData(p_id) {
+
+    //ADD TRY CATCH 
+    console.log("getPokemonMovesData called with id: " + p_id);
+    //p_id = helper.errorCheckID(p_id);
+    //testisnumber()
+    const { data } = await axios.get(`${POKEMON_MOVES_API_URL}${p_id}`);
+
+    const pokemonSummary = {
+     
+        id: data.id,
+        name: data.name,
+        generation: data.generation,
+        effect: english_entry.effect,
+        shortEffect: english_entry.short_effect
+    };
 
     return pokemonSummary;
   }

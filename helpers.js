@@ -1,14 +1,7 @@
 // You can add and export any helper functions you want here - if you aren't using any, then you can just leave this file as is
 
-/***
- * MC TODO ADD MORE HELPERS
- * ERROR CHECKING PART OF ASSIGNMEWNT
- * Error Checking
- * You must error check all routes checking correct data types, making sure all the input is there, in the correct range etc..
- * You must error check all DB functions  checking correct data types, making sure all the input is there, in the correct range  etc..
- * You must fail with proper and valid HTTP status codes depending on the failure type
- * Do not forget to check for proper datatypes in the query string parameters for skip and take (they should be positive numbers, if they are not positive numbers, you should throw an error)
- */
+import { client } from './data/pokemon_doc.js';
+
 
 export let errorCheckID = (p_id) => {
   if (!p_id) throw new Error("ERROR: String Must Be Provided").status(400);
@@ -22,6 +15,18 @@ export let errorCheckID = (p_id) => {
   return p_id;
 };
 
+export let checkPokemonID = (p_id) => {
+  let result = false;
+
+  if(client.exists(`pokemon:${p_id}`))
+  {
+      result = true;
+  }
+
+  return result;
+};
+
+/*
 export let errorCheckUsername = (p_username) => {
   if (typeof p_username !== "string")
     throw new Error("ERROR: Username must be a string");
@@ -201,3 +206,4 @@ export const getCurrentDate = () => {
   // Combine into the desired format
   return `${month}/${day}/${year}`;
 };
+*/

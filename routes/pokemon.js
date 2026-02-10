@@ -51,6 +51,23 @@ router
     
     //ELSE CASE
     try {
+
+
+
+      /**
+       * TODO 
+       * set header data 
+       * 
+       * source: "pokeapi",
+      endpoint: `${POKEMON_API_URL}${p_id}`,
+      cache: {
+        hit: false,
+        key: `pokemon:${p_id}`,
+      },
+      fetchedAt: new Date().toISOString(), //use date class later 
+       * 
+       * 
+       */
     const pokemon = await poke_doc.getPokemonData(req.params.id);
 
       //add the header 
