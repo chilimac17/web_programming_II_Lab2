@@ -19,11 +19,11 @@ export let errorCheckID = (p_id) => {
   return p_id;
 };
 
-export let checkPokemonID = async (p_id) => {
+export let checkPokemonID = async (p_id,p_redis_key) => {
   let result = false;
-  console.log("client.exists(`pokemon:${p_id}`" + await client.exists(`pokemon:${p_id}`));
+  console.log("client.exists(`${p_redis_key}:${p_id}`" + await client.exists(`${p_redis_key}:${p_id}`));
 
-  if(await client.exists(`pokemon:${p_id}`) !== 0)
+  if(await client.exists(`${p_redis_key}:${p_id}`) !== 0)
   {
       result = true;
   }
@@ -31,21 +31,24 @@ export let checkPokemonID = async (p_id) => {
   return result;
 };
 
-export let getPokemonSummary = async (p_id) => {
+
+export let getPokemonCache = async (p_id,p_redis_key ) => {
   let result = undefined;
 
-  console.log("getPokemonSummary called with id: " + p_id);
+  console.log("getPokemonCache called with id: " + p_id + " and redis key: " + p_redis_key);
 
-  if (await checkPokemonID(p_id)) {
-      const data = await client.get(`pokemon:${p_id}`);
+  if (await checkPokemonID(p_id, p_redis_key)) {
+      const data = await client.get(`${p_redis_key}:${p_id}`);
       if (data) {
           result = JSON.parse(data);
       }
-      console.log("getPokemonSummary result: ", result);
+      console.log("getPokemonCache result: ", result);
   }
 
   return result;
 };
+
+
 
 
 export let createWrapper = (p_endpoint, p_id) => {
@@ -100,19 +103,32 @@ export let createWrapper = (p_endpoint, p_id) => {
 };
 
 
-export let addPokemonSummaryToCache = async (p_id, p_summary) => {
+export let addPokemonSummaryToCache = async (p_id, p_summary, p_redis_key) => {
 
-  console.log("addPokemonSummaryToCache called with id: " + p_id + " and summary: ", p_summary);
+  console.log("addPokemonSummaryToCache called with id: " + p_id + " and summary: ", p_summary + " and redis key: " + p_redis_key);
 
-  const key = `pokemon:${p_id}`;
-  const history_entry = `${p_id}:${Date.now()}`
+  const key = `${p_redis_key}:${p_id}`;
+  const history_entry = `${p_id}:${Date.now()}`;
 
-    await client
+    if(p_redis_key === "pokemon")
+      {
+await client
             .multi()
             //.set(key, flatten(pokemonSummary, { safe: true }))
             .set(key, JSON.stringify(p_summary), { safe: true })
             .lPush("recentlyViewed", history_entry)
             .exec();
+      }
+      else if(p_redis_key === "ability")
+        {
+          await client
+            .set(key, JSON.stringify(p_summary), { safe: true });
+        }
+      else if(p_redis_key === "move")
+        {
+          await client
+            .set(key, JSON.stringify(p_summary), { safe: true });
+        }
 
 };
 /*

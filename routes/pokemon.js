@@ -13,7 +13,7 @@ router.route("/").get(async (req, res) => {
 });
 
 router
-  .route("/:id")
+  .route("/pokemon/:id")
   .get(async (req, res) => {
     //code here for GET
     console.log("route: /api/pokemon/:id (GET) ID = " + req.params.id);
@@ -53,16 +53,67 @@ router
 
 
 router
-.route("/api/abilities/:id")
+.route("/abilities/:id")
 .get(async (req, res) => {
-  
+   //code here for GET
+    console.log("route: /api/abilities/:id (GET) ID = " + req.params.id);
+    
+    try {
+    const pokemon = await poke_doc.getPokemonAbilitiesData(req.params.id);
+    
+    console.log("POKEMON DATA2: ", pokemon);
+    //req.params.id not working 
+    await helper.addPokemonSummaryToCache(pokemon.id, pokemon, "ability");
+    
+      let result = {
+        'source': req.wrapperData.source,
+        'endpoint': req.wrapperData.endpoint,
+        'cache': {
+          'hit': req.wrapperData.cache.hit,
+          'key': req.wrapperData.cache.key
+        },
+        'fetchedAt': req.wrapperData.fetchedAt,
+        'data': pokemon
+      };
+
+      console.log("RESULT2: ", result);
+
+    return res.json({ result });
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
 });
 
 
 router
-.route("/api/moves/:id")
+.route("/moves/:id")
 .get(async (req, res) => {
-  
+   console.log("route: /api/moves/:id (GET) ID = " + req.params.id);
+    
+    try {
+    const pokemon = await poke_doc.getPokemonMovesData(req.params.id);
+    
+    console.log("POKEMON DATA3: ", pokemon);
+    //req.params.id not working 
+    await helper.addPokemonSummaryToCache(pokemon.id, pokemon, "move");
+    
+      let result = {
+        'source': req.wrapperData.source,
+        'endpoint': req.wrapperData.endpoint,
+        'cache': {
+          'hit': req.wrapperData.cache.hit,
+          'key': req.wrapperData.cache.key
+        },
+        'fetchedAt': req.wrapperData.fetchedAt,
+        'data': pokemon
+      };
+
+      console.log("RESULT3: ", result);
+
+    return res.json({ result });
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
 });
 
 export default router;

@@ -49,6 +49,8 @@ const exportedMethods = {
     //testisnumber()
     const { data } = await axios.get(`${POKEMON_ABILITIES_API_URL}${p_id}`);
 
+    console.log("getPokemonAbilitiesData data: " + data);
+
     let english_entry = data.effect_entries.find((entry) => entry.language.name === "en");
 
     const pokemonSummary = {
@@ -70,18 +72,28 @@ const exportedMethods = {
     //testisnumber()
     const { data } = await axios.get(`${POKEMON_MOVES_API_URL}${p_id}`);
 
-    const pokemonSummary = {
+    const pokemonMove = {
      
         id: data.id,
         name: data.name,
-        generation: data.generation,
-        effect: english_entry.effect,
-        shortEffect: english_entry.short_effect
-    };
+        type: data.type,
+        damageClass: data.damage_class.name,
+        power: data.power,
+        pp: data.pp,
+        accuracy: data.accuracy,
+        meta: {
+            critRate: data.meta.crit_rate,
+            drain: data.meta.drain,
+            healing: data.meta.healing,
+            flinchChance: data.meta.flinch_chance
+          }
+    }
+     return pokemonMove;
+  },
 
-    return pokemonSummary;
-  }
+   
+  };
 
  
-};
+
 export default exportedMethods;
