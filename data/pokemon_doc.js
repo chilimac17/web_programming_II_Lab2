@@ -21,6 +21,8 @@ const exportedMethods = {
     //testisnumber()
     const { data } = await axios.get(`${POKEMON_API_URL}${p_id}`);
 
+    //console.log("getPokemonData data: " + data);
+
     const pokemonSummary = {
      
         id: data.id,
@@ -36,19 +38,7 @@ const exportedMethods = {
       
     };
 
-    /*
-
-    const key = `pokemon:${data.id}`;
-    const history_entry = `${data.id}:${Date.now()}`
-
-    await client
-            .multi()
-            //.set(key, flatten(pokemonSummary, { safe: true }))
-            .set(key, JSON.stringify(pokemonSummary), { safe: true })
-            .lPush("recentlyViewed", history_entry)
-            .exec();
-*/
-
+    console.log("getPokemonData summary: ", pokemonSummary);
     return pokemonSummary;
   },
   async getPokemonAbilitiesData(p_id) {

@@ -3,6 +3,10 @@
 import { client } from './data/pokemon_doc.js';
 
 
+const POKEMON_API_URL = "https://pokeapi.co/api/v2/pokemon/";
+const POKEMON_ABILITIES_API_URL = "https://pokeapi.co/api/v2/ability/";
+const POKEMON_MOVES_API_URL = "https://pokeapi.co/api/v2/move/";
+
 export let errorCheckID = (p_id) => {
   if (!p_id) throw new Error("ERROR: String Must Be Provided").status(400);
 
@@ -15,10 +19,11 @@ export let errorCheckID = (p_id) => {
   return p_id;
 };
 
-export let checkPokemonID = (p_id) => {
+export let checkPokemonID = async (p_id) => {
   let result = false;
+  console.log("client.exists(`pokemon:${p_id}`" + await client.exists(`pokemon:${p_id}`));
 
-  if(client.exists(`pokemon:${p_id}`))
+  if(await client.exists(`pokemon:${p_id}`) !== 0)
   {
       result = true;
   }
@@ -26,6 +31,90 @@ export let checkPokemonID = (p_id) => {
   return result;
 };
 
+export let getPokemonSummary = async (p_id) => {
+  let result = undefined;
+
+  console.log("getPokemonSummary called with id: " + p_id);
+
+  if (await checkPokemonID(p_id)) {
+      const data = await client.get(`pokemon:${p_id}`);
+      if (data) {
+          result = JSON.parse(data);
+      }
+      console.log("getPokemonSummary result: ", result);
+  }
+
+  return result;
+};
+
+
+export let createWrapper = (p_endpoint, p_id) => {
+  
+
+      /**
+       * TODO 
+       * set header data 
+       * 
+       * source: "pokeapi",
+      endpoint: `${POKEMON_API_URL}${p_id}`,
+      cache: {
+        hit: false,
+        key: `pokemon:${p_id}`,
+      },
+      fetchedAt: new Date().toISOString(), //use date class later 
+       * 
+       * 
+       */
+
+      let poke_endpoint = undefined;
+
+      if(p_endpoint.startsWith("/api/pokemon/"))
+        {
+          poke_endpoint = `${POKEMON_API_URL}${p_id}`;
+        }
+      else if(p_endpoint.startsWith("/api/abilities/"))
+        {
+          poke_endpoint = `${POKEMON_ABILITIES_API_URL}${p_id}`;
+        }
+      else if(p_endpoint.startsWith("/api/moves/"))
+        {
+          poke_endpoint = `${POKEMON_MOVES_API_URL}${p_id}`;
+        }
+
+
+        
+      let wrapperData = {
+        'source': "pokeapi",
+        'endpoint': poke_endpoint,
+        'cache': {
+          'hit': false,
+          'key': `pokemon:${p_id}`
+        },
+        'fetchedAt': new Date().toISOString(),
+        'data': null
+      };
+
+      return wrapperData;
+
+
+};
+
+
+export let addPokemonSummaryToCache = async (p_id, p_summary) => {
+
+  console.log("addPokemonSummaryToCache called with id: " + p_id + " and summary: ", p_summary);
+
+  const key = `pokemon:${p_id}`;
+  const history_entry = `${p_id}:${Date.now()}`
+
+    await client
+            .multi()
+            //.set(key, flatten(pokemonSummary, { safe: true }))
+            .set(key, JSON.stringify(p_summary), { safe: true })
+            .lPush("recentlyViewed", history_entry)
+            .exec();
+
+};
 /*
 export let errorCheckUsername = (p_username) => {
   if (typeof p_username !== "string")

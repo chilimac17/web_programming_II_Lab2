@@ -4,84 +4,49 @@ import poke_doc from "../data/pokemon_doc.js";
 import * as helper from "../helpers.js";
 
 const router = Router();
-const POKEMON_API_URL = "https://pokeapi.co/api/v2/pokemon/";
-const POKEMON_ABILITIES_API_URL = "https://pokeapi.co/api/v2/ability/";
-const POKEMON_MOVES_API_URL = "https://pokeapi.co/api/v2/move/";
+
 
 
 router.route("/").get(async (req, res) => {
   console.log("route: / (GET) ");
-  res.json({message: "Welcome to the Pokemon API!"});
+  return res.json({message: "Welcome to the Pokemon API!"});
 });
 
 router
-  .route("/api/pokemon/:id")
+  .route("/:id")
   .get(async (req, res) => {
     //code here for GET
     console.log("route: /api/pokemon/:id (GET) ID = " + req.params.id);
-    /**
-     * TODO
-     * 
-     *  Check if the Pokémon has a cache entry in Redis (The middleware actually checks this, before going on to this route) . If so, render the result from that cache entry
-     *  If not, query the data from the PokéAPI for the Pokémon and fail the request if it is not found, or send JSON and cache the result if it is found.
-     * 
-     * 
-     *  Expected Output:
-     * *  {{
-     * * "id": 25,
-     * * "name": "pikachu",
-     * * "height": 4,
-     * * "weight": 60,
-     * * "types": ["electric"],
-     * * "abilities": ["lightning-rod", "static"],
-     * * "baseStats": {
-     * * "hp": 35,
-     * * "attack": 55,
-     * * "defense": 40,
-     * * "special-attack": 50,
-     * * "special-defense": 50,
-     * * "speed": 90
-     * *  }}
-     */
-
-
-    //req.params.id = helper.errorCheckID(req.params.id);
-
-
     
-    //ELSE CASE
     try {
-
-
-
-      /**
-       * TODO 
-       * set header data 
-       * 
-       * source: "pokeapi",
-      endpoint: `${POKEMON_API_URL}${p_id}`,
-      cache: {
-        hit: false,
-        key: `pokemon:${p_id}`,
-      },
-      fetchedAt: new Date().toISOString(), //use date class later 
-       * 
-       * 
-       */
     const pokemon = await poke_doc.getPokemonData(req.params.id);
+    
+    console.log("POKEMON DATA: ", pokemon);
+    //req.params.id not working 
+    await helper.addPokemonSummaryToCache(pokemon.id, pokemon);
+    
+      let result = {
+        'source': req.wrapperData.source,
+        'endpoint': req.wrapperData.endpoint,
+        'cache': {
+          'hit': req.wrapperData.cache.hit,
+          'key': req.wrapperData.cache.key
+        },
+        'fetchedAt': req.wrapperData.fetchedAt,
+        'data': pokemon
+      };
 
-      //add the header 
+      console.log("RESULT: ", result);
 
-
-    res.json(pokemon);
+    return res.json({ result });
   } catch (e) {
-    res.status(404).json({ error: e.message });
+    return res.status(404).json({ error: e.message });
   }
 
   });
 
 router
-.route("/api/pokemon/history")
+.route("/history")
 .get(async (req, res) => {
   
 });
