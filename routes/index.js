@@ -5,133 +5,80 @@
     - When the route is /games use the routes defined in games.js routing file
     - All other enpoints should respond with a 404 as shown in the lecture code
 */
-import pokeRoutes from './pokemon.js';
+import pokeRoutes from "./pokemon.js";
 import * as helper from "../helpers.js";
 
 const constructorMethod = (app) => {
-  
-  
- // helper.checkPokemonID(req.params.id)
-    app.use(async (req, res, next) => {
-      //console.log('Index.js METHOD:', req.method);
-      //console.log('Index.js PATH:  ', req.path);
-      //console.log('Index.js URL:', req.originalUrl);
+  app.use(async (req, res, next) => {
+    try {
+      let id = req.path.split("/").pop();
 
-   try {
-          const id = req.path.split('/').pop();
+      let wrapperData = helper.createWrapper(req.originalUrl, id);
+      req.wrapperData = wrapperData;
 
-          let wrapperData = helper.createWrapper(req.originalUrl, id);
-          req.wrapperData = wrapperData;
+      if (req.path.startsWith("/api/pokemon/")) {
+        //id = helper.errorCheckID(id);
+        if ((await helper.checkPokemonID(id, "pokemon")) == true) {
+          //grab cache data and set header data accordingly
+          wrapperData.cache.hit = true;
 
+          const cacheData = await helper.getPokemonCache(id, "pokemon");
 
-        if (req.path.startsWith("/api/pokemon/")) {
-     
-          //req.params.id = helper.errorCheckID(req.params.id);
-          
+          helper.addPokemonHistory(id);
 
-          //console.log("CHECKING CACHE FOR ID: " + id);
-          //console.log("WRAPPER DATA: ", wrapperData);
-          //console.log("WRAPPER DATA2: ", req.wrapperData);
-
-
-
-          if(await helper.checkPokemonID(id, "pokemon") == true)
-            {
-              //grab cache data and set header data accordingly
-              wrapperData.cache.hit = true;
-
-                const cacheData = await helper.getPokemonCache(id, "pokemon");
-
-                //TODO UPDATE POKEMON HISTORY
-
-               // res.set('X-Data-Source', 'Cache');
-               wrapperData.data = cacheData;   
-               console.log("CURRENT WRAPPER DATA: ", wrapperData);
-               return res.json(wrapperData);
-            }
-            else
-              {
-                //set header data accordingly for cache miss
-                // go to route
-                console.log("CACHE MISS FOR ID: " + id);
-                return next();
-
-              }
-
-       
-
+          wrapperData.data = cacheData;
+          return res.json(wrapperData);
+        } else {
+          //set header data accordingly for cache miss
+          // go to route
+          return next();
         }
-        else if (req.path.startsWith("/api/pokemon/history"))
-        {
+      } else if (req.path.startsWith("/api/pokemon/history")) {
+        const history_list = helper.getPokemonHistory();
+        return res.json(history_list);
+      } else if (req.path.startsWith("/api/abilities/")) {
+        if ((await helper.checkPokemonID(id, "ability")) == true) {
+          //grab cache data and set header data accordingly
+          wrapperData.cache.hit = true;
 
+          const cacheData = await helper.getPokemonCache(id, "ability");
+          wrapperData.data = cacheData;
+
+          return res.json(wrapperData);
+        } else {
+          //set header data accordingly for cache miss
+          // go to route
+          return next();
         }
-        else if (req.path.startsWith("/api/abilities/"))
-        {
+      } else if (req.path.startsWith("/api/moves/")) {
+        if ((await helper.checkPokemonID(id, "move")) == true) {
+          //grab cache data and set header data accordingly
+          wrapperData.cache.hit = true;
 
-          if(await helper.checkPokemonID(id, "ability") == true)
-            {
-              //grab cache data and set header data accordingly
-              wrapperData.cache.hit = true;
+          const cacheData = await helper.getPokemonCache(id, "move");
 
-                const cacheData = await helper.getPokemonCache(id, "ability");
-
-               // res.set('X-Data-Source', 'Cache');
-               wrapperData.data = cacheData;   
-               console.log("CURRENT WRAPPER DATA2: ", wrapperData);
-               return res.json(wrapperData);
-            }
-            else
-              {
-                //set header data accordingly for cache miss
-                // go to route
-                console.log("CACHE MISS FOR ID2: " + id);
-                return next();
-
-              }
+          // res.set('X-Data-Source', 'Cache');
+          wrapperData.data = cacheData;
+          return res.json(wrapperData);
+        } else {
+          //set header data accordingly for cache miss
+          // go to route
+          return next();
         }
-        else if (req.path.startsWith("/api/moves/"))
-        {
-          if(await helper.checkPokemonID(id, "move") == true)
-            {
-              //grab cache data and set header data accordingly
-              wrapperData.cache.hit = true;
-
-                const cacheData = await helper.getPokemonCache(id, "move");
-
-               // res.set('X-Data-Source', 'Cache');
-               wrapperData.data = cacheData;   
-               console.log("CURRENT WRAPPER DATA3: ", wrapperData);
-               return res.json(wrapperData);
-            }
-            else
-              {
-                //set header data accordingly for cache miss
-                // go to route
-                console.log("CACHE MISS FOR ID3: " + id);
-                return next();
-
-              }
-        }
-        else
-        {
-          
-        }
-
-        return next();
-
+      } else {
       }
-        catch (e) {
-          return res.status(400).json({ error: e.message });
-        }
-    });
-  
-  
-  
-//app.use("/", pokeRoutes);
-        app.use("/api/", pokeRoutes);
 
-  app.use('*', (req, res) => {
-    res.status(404).json({error: 'Route Not found'});
+      return next();
+    } catch (e) {
+      return res.status(400).json({ error: e.message });
+    }
+  });
+
+  //app.use("/", pokeRoutes);
+  app.use("/api/", pokeRoutes);
+
+  app.use("*", (req, res) => {
+    res.status(404).json({ error: "Route Not found" });
   });
 };
 
