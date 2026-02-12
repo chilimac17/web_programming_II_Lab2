@@ -49,7 +49,7 @@ export let getPokemonHistory = async () => {
     let id = data[i].split(":")[0];
     let date = data[i].split(":")[1];
     
-    let wrapperData = createWrapper(`/api/pokemon/${id}`, id);
+    let wrapperData = createWrapper(`/api/pokemon/${id}`, id, "pokemon");
     let cacheData = undefined;
 
     if (checkPokemonID(id)) {
@@ -79,7 +79,7 @@ export let addPokemonHistory = async (p_id) => {
   const data = await client.lPush("recentlyViewed", history_entry);
 };
 
-export let createWrapper = (p_endpoint, p_id) => {
+export let createWrapper = (p_endpoint, p_id, p_redis_key) => {
   let poke_endpoint = undefined;
 
   if (p_endpoint.startsWith("/api/pokemon/")) {
@@ -97,7 +97,7 @@ export let createWrapper = (p_endpoint, p_id) => {
     endpoint: poke_endpoint,
     cache: {
       hit: false,
-      key: `pokemon:${p_id}`,
+      key: `${p_redis_key}:${p_id}`,
     },
     fetchedAt: new Date().toISOString(),
     data: null,
