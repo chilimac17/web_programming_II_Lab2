@@ -1,14 +1,17 @@
 // You can add and export any helper functions you want here - if you aren't using any, then you can just leave this file as is
 
-import { client } from "./data/pokemon_doc.js";
+import { createClient } from "redis";
 
 const POKEMON_API_URL = "https://pokeapi.co/api/v2/pokemon/";
 const POKEMON_ABILITIES_API_URL = "https://pokeapi.co/api/v2/ability/";
 const POKEMON_MOVES_API_URL = "https://pokeapi.co/api/v2/move/";
+export const client = createClient();
+
 
 export let errorCheckID = (p_id) => {
+    p_id = Number(p_id);
   if (!Number.isInteger(p_id) || p_id <= 0) {
-    return new Error("Invalid id");
+    throw new Error("Invalid id");
   }
 
   return p_id;
@@ -38,20 +41,20 @@ export let getPokemonCache = async (p_id, p_redis_key) => {
 };
 
 export let getPokemonHistory = async () => {
-  let data = await client.get("recentlyViewed");
+  let data = await client.lRange("recentlyViewed", 0, 19);
   let final_list = [];
-  let id = undefined;
 
-  for (let i = 0; i < data.length && i < 20; i++) {
+  for (let i = 0; i < data.length; i++) { 
     //split
-    id = data[i].split(":")[0];
+    let id = data[i].split(":")[0];
     let date = data[i].split(":")[1];
-
-    let wrapperData = createWrapper(`${POKEMON_API_URL}${id}`, id);
+    
+    let wrapperData = createWrapper(`/api/pokemon/${id}`, id);
     let cacheData = undefined;
+
     if (checkPokemonID(id)) {
       wrapperData.cache.hit = true;
-      cacheData = await helper.getPokemonCache(id, "pokemon");
+      cacheData = await getPokemonCache(id, "pokemon");
     } else {
       cacheData = getPokemonData(id);
     }
@@ -64,9 +67,10 @@ export let getPokemonHistory = async () => {
       pokemon: wrapperData,
     };
 
-    final_list.lPush(history);
-  }
+    final_list.push(history);
 
+    
+  }
   return final_list;
 };
 
@@ -85,6 +89,8 @@ export let createWrapper = (p_endpoint, p_id) => {
   } else if (p_endpoint.startsWith("/api/moves/")) {
     poke_endpoint = `${POKEMON_MOVES_API_URL}${p_id}`;
   }
+
+
 
   let wrapperData = {
     source: "pokeapi",

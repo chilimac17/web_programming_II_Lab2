@@ -1,22 +1,32 @@
 //import express, express router as shown in lecture code
 import { Router } from "express";
-import poke_doc from "../data/pokemon_doc.js";
-import * as helper from "../helpers.js";
+import poke_doc from "../data/pokeAPI.js";
+import { client } from "../data/redisCache.js";
+import * as redisServer from "../data/redisCache.js";
 
 const router = Router();
 
+router.route("/pokemon/history").get(async (req, res) => {
+  try {
+    const history_list = await redisServer.getPokemonHistory();
+    return res.json(history_list);
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
+});
 router.route("/pokemon/:id").get(async (req, res) => {
   //code here for GET
   try {
-    //helper.errorCheckID(req.params.id);
+    redisServer.errorCheckID(req.params.id);
+
     const pokemon = await poke_doc.getPokemonData(req.params.id);
 
     if (!pokemon) {
       return res.status(404).json({ error: "Not Found" });
     }
 
-    await helper.addPokemonSummaryToCache(pokemon.id, pokemon, "pokemon");
-
+    await redisServer.addPokemonSummaryToCache(pokemon.id, pokemon, "pokemon");
+    await client.incr("stats:pokemon:misses");
     return res.json({
       source: req.wrapperData.source,
       endpoint: req.wrapperData.endpoint,
@@ -28,19 +38,19 @@ router.route("/pokemon/:id").get(async (req, res) => {
       data: pokemon,
     });
   } catch (e) {
+    console.log(e);
     return res.status(404).json({ error: e.message });
   }
 });
 
-router.route("/history").get(async (req, res) => {});
-
 router.route("/abilities/:id").get(async (req, res) => {
   //code here for GET
   try {
+    redisServer.errorCheckID(req.params.id);
     const pokemon = await poke_doc.getPokemonAbilitiesData(req.params.id);
 
-    await helper.addPokemonSummaryToCache(pokemon.id, pokemon, "ability");
-
+    await redisServer.addPokemonSummaryToCache(pokemon.id, pokemon, "ability");
+    await client.incr("stats:ability:misses");
     return res.json({
       source: req.wrapperData.source,
       endpoint: req.wrapperData.endpoint,
@@ -58,9 +68,10 @@ router.route("/abilities/:id").get(async (req, res) => {
 
 router.route("/moves/:id").get(async (req, res) => {
   try {
+    redisServer.errorCheckID(req.params.id);
     const pokemon = await poke_doc.getPokemonMovesData(req.params.id);
-    await helper.addPokemonSummaryToCache(pokemon.id, pokemon, "move");
-
+    await redisServer.addPokemonSummaryToCache(pokemon.id, pokemon, "move");
+    await client.incr("stats:moves:misses");
     return res.json({
       source: req.wrapperData.source,
       endpoint: req.wrapperData.endpoint,
