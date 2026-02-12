@@ -19,9 +19,13 @@ app.use("/api/pokemon/:id", async (req, res, next) => {
   try {
     if(req.params.id == "history") return next();
     const id = redisServer.errorCheckID(req.params.id);
+    
+    
+    const parts = req.originalUrl.split("/");
+    const redis_key = parts[2];
+    req.redis_key = redis_key;
 
-
-    let wrapperData = redisServer.createWrapper(req.originalUrl, id, "pokemon");
+    let wrapperData = redisServer.createWrapper(req.originalUrl, id, redis_key);
     req.wrapperData = wrapperData;
     if ((await redisServer.checkPokemonID(id, "pokemon")) == true) {
       //grab cache data and set header data accordingly
@@ -44,7 +48,10 @@ app.use("/api/pokemon/:id", async (req, res, next) => {
 });
 
 app.use("/api/abilities/:id", async (req, res, next) => {
-  let wrapperData = redisServer.createWrapper(req.originalUrl, req.params.id, "ability");
+   const parts = req.originalUrl.split("/");
+    const redis_key = parts[2];
+    req.redis_key = redis_key;
+  let wrapperData = redisServer.createWrapper(req.originalUrl, req.params.id, redis_key);
   req.wrapperData = wrapperData;
   if ((await redisServer.checkPokemonID(req.params.id, "ability")) == true) {
     //grab cache data and set header data accordingly
@@ -62,7 +69,10 @@ app.use("/api/abilities/:id", async (req, res, next) => {
 });
 
 app.use("/api/moves/:id", async (req, res, next) => {
-  let wrapperData = redisServer.createWrapper(req.originalUrl, req.params.id, "move");
+const parts = req.originalUrl.split("/");
+    const redis_key = parts[2];
+    req.redis_key = redis_key;
+  let wrapperData = redisServer.createWrapper(req.originalUrl, req.params.id, redis_key);
   req.wrapperData = wrapperData;
   if ((await redisServer.checkPokemonID(req.params.id, "move")) == true) {
     //grab cache data and set header data accordingly
