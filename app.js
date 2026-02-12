@@ -17,10 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/pokemon/:id", async (req, res, next) => {
   try {
-    if(req.params.id == "history") return next();
+    if (req.params.id == "history") return next();
     const id = redisServer.errorCheckID(req.params.id);
-    
-    
+
     const parts = req.originalUrl.split("/");
     const redis_key = parts[2];
     req.redis_key = redis_key;
@@ -43,50 +42,72 @@ app.use("/api/pokemon/:id", async (req, res, next) => {
       return next();
     }
   } catch (error) {
-    console.log(error);
+    return res.status(400).json({ error: error.message });
   }
 });
 
 app.use("/api/abilities/:id", async (req, res, next) => {
-   const parts = req.originalUrl.split("/");
+  try {
+    const parts = req.originalUrl.split("/");
     const redis_key = parts[2];
     req.redis_key = redis_key;
-  let wrapperData = redisServer.createWrapper(req.originalUrl, req.params.id, redis_key);
-  req.wrapperData = wrapperData;
-  if ((await redisServer.checkPokemonID(req.params.id, "ability")) == true) {
-    //grab cache data and set header data accordingly
-    wrapperData.cache.hit = true;
-    await client.incr("stats:ability:hits");
-    const cacheData = await redisServer.getPokemonCache(req.params.id, "ability");
-    wrapperData.data = cacheData;
+    let wrapperData = redisServer.createWrapper(
+      req.originalUrl,
+      req.params.id,
+      redis_key,
+    );
+    req.wrapperData = wrapperData;
+    if ((await redisServer.checkPokemonID(req.params.id, "ability")) == true) {
+      //grab cache data and set header data accordingly
+      wrapperData.cache.hit = true;
+      await client.incr("stats:ability:hits");
+      const cacheData = await redisServer.getPokemonCache(
+        req.params.id,
+        "ability",
+      );
+      wrapperData.data = cacheData;
 
-    return res.json(wrapperData);
-  } else {
-    //set header data accordingly for cache miss
-    // go to route
-    return next();
+      return res.json(wrapperData);
+    } else {
+      //set header data accordingly for cache miss
+      // go to route
+      return next();
+    }
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
   }
 });
 
 app.use("/api/moves/:id", async (req, res, next) => {
-const parts = req.originalUrl.split("/");
+  try {
+    const parts = req.originalUrl.split("/");
     const redis_key = parts[2];
     req.redis_key = redis_key;
-  let wrapperData = redisServer.createWrapper(req.originalUrl, req.params.id, redis_key);
-  req.wrapperData = wrapperData;
-  if ((await redisServer.checkPokemonID(req.params.id, "move")) == true) {
-    //grab cache data and set header data accordingly
-    wrapperData.cache.hit = true;
-    await client.incr("stats:moves:hits");
-    const cacheData = await redisServer.getPokemonCache(req.params.id, "move");
+    let wrapperData = redisServer.createWrapper(
+      req.originalUrl,
+      req.params.id,
+      redis_key,
+    );
+    req.wrapperData = wrapperData;
+    if ((await redisServer.checkPokemonID(req.params.id, "move")) == true) {
+      //grab cache data and set header data accordingly
+      wrapperData.cache.hit = true;
+      await client.incr("stats:move:hits");
+      const cacheData = await redisServer.getPokemonCache(
+        req.params.id,
+        "move",
+      );
 
-    // res.set('X-Data-Source', 'Cache');
-    wrapperData.data = cacheData;
-    return res.json(wrapperData);
-  } else {
-    //set header data accordingly for cache miss
-    // go to route
-    return next();
+      // res.set('X-Data-Source', 'Cache');
+      wrapperData.data = cacheData;
+      return res.json(wrapperData);
+    } else {
+      //set header data accordingly for cache miss
+      // go to route
+      return next();
+    }
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
   }
 });
 

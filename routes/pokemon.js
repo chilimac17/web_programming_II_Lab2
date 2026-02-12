@@ -71,7 +71,7 @@ router.route("/moves/:id").get(async (req, res) => {
     redisServer.errorCheckID(req.params.id);
     const pokemon = await poke_doc.getPokemonMovesData(req.params.id);
     await redisServer.addPokemonSummaryToCache(pokemon.id, pokemon, "move");
-    await client.incr("stats:moves:misses");
+    await client.incr("stats:move:misses");
     return res.json({
       source: req.wrapperData.source,
       endpoint: req.wrapperData.endpoint,
@@ -81,6 +81,22 @@ router.route("/moves/:id").get(async (req, res) => {
       },
       fetchedAt: req.wrapperData.fetchedAt,
       data: pokemon,
+    });
+  } catch (e) {
+    return res.status(404).json({ error: e.message });
+  }
+});
+
+router.route("/cache/stats").get(async (req, res) => {
+  try {
+    const pokemon_stats = await redisServer.getPokemonStats();
+    const ability_stats = await redisServer.getAbilityStats();
+    const move_stats = await redisServer.getMoveStats();
+
+    return res.json({
+      pokemon: { hits: pokemon_stats.hits, misses: pokemon_stats.misses },
+      abilities: { hits: ability_stats.hits, misses: ability_stats.misses },
+      moves: { hits: move_stats.hits, misses: move_stats.misses },
     });
   } catch (e) {
     return res.status(404).json({ error: e.message });

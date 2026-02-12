@@ -5,11 +5,18 @@ import { createClient } from "redis";
 const POKEMON_API_URL = "https://pokeapi.co/api/v2/pokemon/";
 const POKEMON_ABILITIES_API_URL = "https://pokeapi.co/api/v2/ability/";
 const POKEMON_MOVES_API_URL = "https://pokeapi.co/api/v2/move/";
+
+const POKEMON_STATS_HITS_REDIS_KEY = "stats:pokemon:hits";
+const POKEMON_STATS_MISSES_REDIS_KEY = "stats:pokemon:misses";
+const ABILITY_STATS_HITS_REDIS_KEY = "stats:ability:hits";
+const ABILITY_STATS_MISSES_REDIS_KEY = "stats:ability:misses";
+const MOVE_STATS_HITS_REDIS_KEY = "stats:move:hits";
+const MOVE_STATS_MISSES_REDIS_KEY = "stats:move:misses";
+
 export const client = createClient();
 
-
 export let errorCheckID = (p_id) => {
-    p_id = Number(p_id);
+  p_id = Number(p_id);
   if (!Number.isInteger(p_id) || p_id <= 0) {
     throw new Error("Invalid id");
   }
@@ -44,11 +51,11 @@ export let getPokemonHistory = async () => {
   let data = await client.lRange("recentlyViewed", 0, 19);
   let final_list = [];
 
-  for (let i = 0; i < data.length; i++) { 
+  for (let i = 0; i < data.length; i++) {
     //split
     let id = data[i].split(":")[0];
     let date = data[i].split(":")[1];
-    
+
     let wrapperData = createWrapper(`/api/pokemon/${id}`, id, "pokemon");
     let cacheData = undefined;
 
@@ -68,8 +75,6 @@ export let getPokemonHistory = async () => {
     };
 
     final_list.push(history);
-
-    
   }
   return final_list;
 };
@@ -89,8 +94,6 @@ export let createWrapper = (p_endpoint, p_id, p_redis_key) => {
   } else if (p_endpoint.startsWith("/api/moves/")) {
     poke_endpoint = `${POKEMON_MOVES_API_URL}${p_id}`;
   }
-
-
 
   let wrapperData = {
     source: "pokeapi",
@@ -122,4 +125,40 @@ export let addPokemonSummaryToCache = async (p_id, p_summary, p_redis_key) => {
   } else if (p_redis_key === "move") {
     await client.set(key, JSON.stringify(p_summary), { safe: true });
   }
+};
+
+export let getPokemonStats = async () => {
+  const hits = await client.get(POKEMON_STATS_HITS_REDIS_KEY);
+  const misses = await client.get(POKEMON_STATS_MISSES_REDIS_KEY);
+
+  const stats = {
+    hits: hits,
+    misses: misses,
+  };
+
+  return stats;
+};
+
+export let getAbilityStats = async () => {
+  const hits = await client.get(ABILITY_STATS_HITS_REDIS_KEY);
+  const misses = await client.get(ABILITY_STATS_MISSES_REDIS_KEY);
+
+  const stats = {
+    hits: hits,
+    misses: misses,
+  };
+
+  return stats;
+};
+
+export let getMoveStats = async () => {
+  const hits = await client.get(MOVE_STATS_HITS_REDIS_KEY);
+  const misses = await client.get(MOVE_STATS_MISSES_REDIS_KEY);
+
+  const stats = {
+    hits: hits,
+    misses: misses,
+  };
+
+  return stats;
 };
